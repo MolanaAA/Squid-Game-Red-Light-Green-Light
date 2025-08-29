@@ -19,7 +19,7 @@ interface ExplosionParticle {
 export default function SquidGame() {
   const [position, setPosition] = useState<Position>({ x: 200, y: 480 });
   const [started, setStarted] = useState(false);
-  const [pressed, setPressed] = useState(false);
+  // const [pressed, setPressed] = useState(false); // Removed unused variable
   const [paused, setPaused] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [gameWin, setGameWin] = useState(false);
@@ -38,6 +38,26 @@ export default function SquidGame() {
   const CANVAS_HEIGHT = 500;
   const PLAYER_SIZE = 40;
   const MOVEMENT_SPEED = 2;
+
+  // Create explosion effect
+  const createExplosion = useCallback(() => {
+    const particles: ExplosionParticle[] = [];
+    for (let i = 0; i < 50; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 3 + 2;
+      const size = Math.random() * 8 + 4;
+      
+      particles.push({
+        x: position.x,
+        y: position.y,
+        size,
+        angle,
+        speed,
+        life: 1
+      });
+    }
+    setExplosionParticles(particles);
+  }, [position.x, position.y]);
 
   // Initialize game time
   useEffect(() => {
@@ -88,7 +108,7 @@ export default function SquidGame() {
     }
 
     animationRef.current = requestAnimationFrame(gameLoop);
-  }, [started, gameOver, gameWin, gameTime, paused, time, position.y]);
+  }, [started, gameOver, gameWin, gameTime, paused, time, position.y, createExplosion]);
 
   // Start game loop
   useEffect(() => {
@@ -108,14 +128,12 @@ export default function SquidGame() {
       const key = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
         keysPressed.current.add(key);
-        setPressed(true);
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
       keysPressed.current.delete(key);
-      setPressed(keysPressed.current.size > 0 || touchButtons.current.size > 0);
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -161,33 +179,13 @@ export default function SquidGame() {
   const handleTouchStart = (direction: string) => {
     if (!started || gameOver || gameWin) return;
     touchButtons.current.add(direction);
-    setPressed(true);
   };
 
   const handleTouchEnd = (direction: string) => {
     touchButtons.current.delete(direction);
-    setPressed(keysPressed.current.size > 0 || touchButtons.current.size > 0);
   };
 
-  // Create explosion effect
-  const createExplosion = () => {
-    const particles: ExplosionParticle[] = [];
-    for (let i = 0; i < 50; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const speed = Math.random() * 3 + 2;
-      const size = Math.random() * 8 + 4;
-      
-      particles.push({
-        x: position.x,
-        y: position.y,
-        size,
-        angle,
-        speed,
-        life: 1
-      });
-    }
-    setExplosionParticles(particles);
-  };
+
 
   // Update explosion particles
   useEffect(() => {
@@ -212,7 +210,6 @@ export default function SquidGame() {
   const restartGame = () => {
     setPosition({ x: 200, y: 480 });
     setStarted(true);
-    setPressed(false);
     setPaused(false);
     setGameOver(false);
     setGameWin(false);
@@ -400,7 +397,7 @@ export default function SquidGame() {
 
         <div className="mt-4 text-center text-sm text-gray-600">
           <p>Use arrow keys or touch buttons to move</p>
-          <p>Don't move when the doll is red!</p>
+          <p>Don&apos;t move when the doll is red!</p>
           <p>Reach the top to win</p>
         </div>
       </div>
